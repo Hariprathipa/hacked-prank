@@ -1,6 +1,7 @@
 const express = require('express');
 require('dotenv').config();
 const mongoose = require('mongoose');
+const path = require('path');
 
 const app = express();
 
@@ -15,10 +16,14 @@ mongoose.connect(process.env.MONGO_URL, {
 .then(() => console.log('MongoDB Connected'))
 .catch(err => console.log(err));
 
-// Example route
+// Serve static frontend files from 'public' folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Default route: serve index.html
 app.get('/', (req, res) => {
-  res.send('Server is running!');
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
+// Start server
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server running on port ${port}`));
