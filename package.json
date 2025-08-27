@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.0"
+  },
+  "name": "prank-page",
+  "version": "1.0.0",
+  "description": "A simple fun prank website that shows a \"Your mobile is hacked\" message.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hariprathipa/hacked-prank.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hariprathipa/hacked-prank/issues"
+  },
+  "homepage": "https://github.com/Hariprathipa/hacked-prank#readme"
+}
