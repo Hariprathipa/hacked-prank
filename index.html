@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css">
+
+  <title>System Alert</title>
+  <style>
+    :root{
+      --bg:#000;
+      --text:#7CFC00;
+      --muted:#9adf9a;
+      --warning:#ff3333;
+      --mono: "Courier New", Courier, monospace;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);}
+    .wrap{max-width:900px;margin:40px auto;padding:20px;}
+    h1{color:var(--warning);font-size:1.6rem;text-align:center;margin:6px 0}
+    .blink{animation:blink 1s steps(2) infinite}
+    @keyframes blink {50%{opacity:0}}
+    .screen{background:#020202;border:1px solid #0f0f0f;padding:20px;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,0.6);}
+    .line{white-space:pre-wrap;font-size:1rem;line-height:1.6}
+    .progress-wrap{margin-top:18px}
+    .bar{
+      background:#222;border-radius:6px;overflow:hidden;height:20px;width:100%;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .bar > .fill{
+      height:100%; width:0%; background:linear-gradient(90deg,#ff4444,#ff8888);
+      transition: width 0.2s linear;
+    }
+    .percent{margin-top:6px;font-size:0.95rem;color:var(--muted)}
+    .reveal{display:block;margin:18px auto;padding:8px 12px;background:var(--warning);border:none;color:white;border-radius:6px;font-weight:bold;cursor:pointer}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+    .btn{padding:8px 12px;border-radius:6px;border:1px solid #333;background:#111;color:var(--text);cursor:pointer}
+    .jk{color:#ff6666;text-align:center;margin-top:18px;font-size:1.1rem}
+    @media(max-width:520px){.wrap{margin:18px;padding:10px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="blink">⚠️ CRITICAL ALERT: DEVICE SECURITY BREACH ⚠️</h1>
+
+    <div class="screen">
+      <div id="terminal" class="line"></div>
+
+      <div class="progress-wrap" aria-hidden="false">
+        <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+          <div id="fill" class="fill"></div>
+        </div>
+        <div id="percent" class="percent">UPLOAD: 0%</div>
+      </div>
+
+      <div class="controls">
+        <button id="soundBtn" class="btn">Play alert sound ⚡</button>
+        <button id="revealBtn" class="btn">Reveal (Stop)</button>
+      </div>
+
+      <div id="final" class="jk" aria-live="polite" style="display:none">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // === Typewriter lines ===
+    const terminal = document.getElementById('terminal');
+    const lines = [
+      ">>> SYSTEM: Unauthorized access detected",
+      ">>> IDENTIFYING TARGET: MOBILE DEVICE",
+      ">>> GATHERING FILES: passwords.db, photos.zip, notes.txt",
+      ">>> ESTABLISHING CONNECTION TO REMOTE SERVER",
+      ">>> UPLOADING DATA... (this may take a few seconds)"
+    ];
+
+    // Type a single line, char by char
+    function typeLine(text, speed=20){
+      return new Promise(resolve=>{
+        let i=0;
+        const loop = () => {
+          if(i < text.length){
+            terminal.textContent += text[i++];
+            window.scrollTo(0, document.body.scrollHeight);
+            setTimeout(loop, speed + Math.random()*30);
+          } else {
+            terminal.textContent += "\n";
+            setTimeout(resolve, 350);
+          }
+        };
+        loop();
+      });
+    }
+
+    // Animate all lines sequentially
+    async function runTerminal(){
+      for(let i=0;i<lines.length;i++){
+        await typeLine(lines[i], 18);
+        if(i === lines.length-1){
+          startFakeUpload();
+        }
+      }
+    }
+
+    // === Fake progress bar ===
+    const fill = document.getElementById('fill');
+    const percent = document.getElementById('percent');
+
+    function startFakeUpload(){
+      let p = 0;
+      const speed = 60; // ms per tick
+      const timer = setInterval(()=>{
+        // simulate non-linear upload
+        p += Math.floor(1 + Math.random()*4);
+        if(p > 99) p = 99;
+        fill.style.width = p + "%";
+        percent.textContent = "UPLOAD: " + p + "%";
+        if(p >= 99){
+          // finish with a short dramatic pause
+          clearInterval(timer);
+          setTimeout(()=>{ fill.style.width = "100%"; percent.textContent = "UPLOAD: 100%"; showReveal(); }, 900);
+        }
+      }, speed);
+    }
+
+    // === Reveal (end prank) ===
+    const final = document.getElementById('final');
+    const revealBtn = document.getElementById('revealBtn');
+    revealBtn.addEventListener('click', showReveal);
+    function showReveal(){
+      final.style.display = "block";
+      terminal.textContent += "\n>>> ALERT: ACTION COMPLETE\n";
+      document.querySelector('.blink').style.animation = "none";
+      // freeze progress bar visually
+      fill.style.boxShadow = "inset 0 0 10px rgba(0,0,0,0.6)";
+    }
+
+    // === Play alert sound (uses WebAudio) ===
+    const soundBtn = document.getElementById('soundBtn');
+    let audioUnlocked = false;
+    soundBtn.addEventListener('click', ()=>{
+      playAlertSequence();
+    });
+
+    function playTone(freq=440, dur=0.2){
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.value = freq;
+        o.connect(g);
+        g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+        o.start();
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+        setTimeout(()=>{ o.stop(); ctx.close(); }, dur*1000 + 100);
+      }catch(e){
+        console.warn("Audio blocked or unavailable", e);
+      }
+    }
+
+    function playAlertSequence(){
+      // small pattern, spaced
+      playTone(880,0.12);
+      setTimeout(()=>playTone(660,0.12),140);
+      setTimeout(()=>playTone(990,0.22),300);
+      setTimeout(()=>playTone(440,0.12),620);
+    }
+
+    // Start typing after page loads (but audio requires user click to play)
+    window.addEventListener('load', ()=>{ runTerminal(); });
+
+    // Allow quick reveal via ENTER key for convenience
+    window.addEventListener('keydown', e => { if(e.key === "Enter") showReveal(); });
+  </script>
+</body>
+</html>
